@@ -252,12 +252,16 @@
             {
                 var targethue = colorDialog1.Color.GetHue();
                 var page = tabControl1.SelectedTab;
-                var image = new System.Drawing.Bitmap(picboxList[page.Text].Image.Width, picboxList[page.Text].Image.Height);
+                var image = resizedBitmaps.ContainsKey(page.Text)
+                    ? new System.Drawing.Bitmap(resizedBitmaps[page.Text].Width, resizedBitmaps[page.Text].Height)
+                    : new System.Drawing.Bitmap(picboxList[page.Text].Image.Width, picboxList[page.Text].Image.Height);
                 for (var y = 0; y < image.Height; y++)
                 {
                     for (var x = 0; x < image.Width; x++)
                     {
-                        var pixelCol = originalBitmaps[page.Text].GetPixel(x, y);
+                        var pixelCol = resizedBitmaps.ContainsKey(page.Text)
+                            ? resizedBitmaps[page.Text].GetPixel(x, y)
+                            : originalBitmaps[page.Text].GetPixel(x, y);
                         var pixelsat = pixelCol.GetSaturation();
                         var pixellum = pixelCol.GetBrightness();
                         // keep the alpha component, just recolor everything on the hue.
@@ -267,13 +271,6 @@
                 }
                 if (resizedBitmaps.ContainsKey(page.Text))
                 {
-                    if (image.Size != resizedBitmaps[page.Text].Size)
-                    {
-                        var newImage = new System.Drawing.Bitmap(image, resizedBitmaps[page.Text].Size);
-                        // free up image made from original image and change it to the size of the resizedBitmap.
-                        image.Dispose(); 
-                        image = newImage;
-                    }
                     resizedBitmaps[page.Text].Dispose();
                     resizedBitmaps.Remove(page.Text);
                     resizedBitmaps.Add(page.Text, image);
