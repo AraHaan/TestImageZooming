@@ -3,13 +3,14 @@
     public partial class Form1 : System.Windows.Forms.Form
     {
         public Form1() => InitializeComponent();
+
         private System.Collections.Generic.Dictionary<string, System.Windows.Forms.PictureBox> picboxList = new System.Collections.Generic.Dictionary<string, System.Windows.Forms.PictureBox>();
         private System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap> originalBitmaps = new System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap>();
         private System.Collections.Generic.Dictionary<string, System.Windows.Forms.ComboBox> comboBoxes = new System.Collections.Generic.Dictionary<string, System.Windows.Forms.ComboBox>();
         private System.Collections.Generic.Dictionary<string, System.Windows.Forms.Panel> panels = new System.Collections.Generic.Dictionary<string, System.Windows.Forms.Panel>();
         private System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap> resizedBitmaps = new System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap>();
-        private int OrigWidth = 0;
-        private int OrigHeight = 0;
+        private int origWidth = 0;
+        private int origHeight = 0;
 
         private void openImageToolStripMenuItem_Click(object sender, System.EventArgs e)
         {
@@ -140,7 +141,7 @@
         // does not resize the controls and place the comboxboxes on every tab correctly.
         private void Form1_Resize(object sender, System.EventArgs e)
         {
-            if (OrigHeight < Height)
+            if (origHeight < Height)
             {
                 tabControl1.Height += 1;
                 for (var i = 0; i < tabControl1.TabPages.Count; i++)
@@ -156,9 +157,9 @@
                     var newloc = new System.Drawing.Point(combobox.Location.X + 1, combobox.Location.Y);
                     combobox.Location = newloc;
                 }
-                OrigHeight += 1;
+                origHeight += 1;
             }
-            else if (OrigHeight > Height)
+            else if (origHeight > Height)
             {
                 tabControl1.Height -= 1;
                 for (var i = 0; i < tabControl1.TabPages.Count; i++)
@@ -174,9 +175,9 @@
                     var newloc = new System.Drawing.Point(combobox.Location.X - 1, combobox.Location.Y);
                     combobox.Location = newloc;
                 }
-                OrigHeight -= 1;
+                origHeight -= 1;
             }
-            if (OrigWidth < Width)
+            if (origWidth < Width)
             {
                 tabControl1.Width += 1;
                 for (var i = 0; i < tabControl1.TabPages.Count; i++)
@@ -192,9 +193,9 @@
                     var newloc = new System.Drawing.Point(combobox.Location.X, combobox.Location.Y + 1);
                     combobox.Location = newloc;
                 }
-                OrigWidth += 1;
+                origWidth += 1;
             }
-            else if (OrigWidth > Width)
+            else if (origWidth > Width)
             {
                 tabControl1.Width -= 1;
                 for (var i = 0; i < tabControl1.TabPages.Count; i++)
@@ -210,14 +211,14 @@
                     var newloc = new System.Drawing.Point(combobox.Location.X, combobox.Location.Y - 1);
                     combobox.Location = newloc;
                 }
-                OrigWidth -= 1;
+                origWidth -= 1;
             }
         }
 
         private void Form1_Load(object sender, System.EventArgs e)
         {
-            OrigWidth = Width;
-            OrigHeight = Height;
+            origWidth = Width;
+            origHeight = Height;
         }
 
         private void Form1_FormClosed(object sender, System.Windows.Forms.FormClosedEventArgs e)
@@ -234,12 +235,21 @@
                 {
                     page.Controls[c].Dispose();
                 }
-                comboBoxes[page.Text].Dispose();
-                comboBoxes.Remove(page.Text);
-                panels[page.Text].Dispose();
-                panels.Remove(page.Text);
-                picboxList[page.Text].Dispose();
-                picboxList.Remove(page.Text);
+                if (comboBoxes.ContainsKey(page.Text))
+                {
+                    comboBoxes[page.Text].Dispose();
+                    comboBoxes.Remove(page.Text);
+                }
+                if (panels.ContainsKey(page.Text))
+                {
+                    panels[page.Text].Dispose();
+                    panels.Remove(page.Text);
+                }
+                if (picboxList.ContainsKey(page.Text))
+                {
+                    picboxList[page.Text].Dispose();
+                    picboxList.Remove(page.Text);
+                }
                 page.Dispose();
                 tabControl1.TabPages.Remove(page);
             }
@@ -266,7 +276,7 @@
                         var pixellum = pixelCol.GetBrightness();
                         // keep the alpha component, just recolor everything on the hue.
                         var alpha = pixelCol.A;
-                        image.SetPixel(x, y, FromHsl(targethue / 360.0f, pixelsat, pixellum, alpha));
+                        image.SetPixel(x, y, FromHsl(targethue, pixelsat, pixellum, alpha));
                     }
                 }
                 if (resizedBitmaps.ContainsKey(page.Text))
@@ -284,7 +294,6 @@
             }
         }
 
-        // this works thankfully.
         /// <summary>
         /// Creates a new <see cref="System.Drawing.Color"/> from the input HSL values.
         /// </summary>
@@ -293,7 +302,7 @@
         /// <param name="lumosity">The Lumosity of the new color.</param>
         /// <param name="alpha">The alpha  value of the new color between 0 and 255.</param>
         /// <returns>A new <see cref="System.Drawing.Color"/> with the Color that the HSL values represent.</returns>
-        public static System.Drawing.Color FromHsl(float hue, float saturation, float lumosity, int alpha)
+        internal static System.Drawing.Color FromHsl(float hue, float saturation, float lumosity, int alpha)
         {
             var chroma = (1 - System.Math.Abs((2 * lumosity) - 1)) * saturation;
             var hue2 = hue / 60;
@@ -330,7 +339,8 @@
                 rgb[2] = x;
             }
             var m = System.Math.Round(255f * (lumosity - (chroma / 2)));
-            return System.Drawing.Color.FromArgb(alpha,
+            return System.Drawing.Color.FromArgb(
+                alpha,
                 (int)(System.Math.Round(255f * rgb[0]) + m),
                 (int)(System.Math.Round(255f * rgb[1]) + m),
                 (int)(System.Math.Round(255f * rgb[2]) + m));
