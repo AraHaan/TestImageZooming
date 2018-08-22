@@ -2,31 +2,36 @@
 {
     public partial class Form1 : System.Windows.Forms.Form
     {
-        public Form1() => InitializeComponent();
-
         private System.Collections.Generic.Dictionary<string, System.Windows.Forms.PictureBox> picboxList = new System.Collections.Generic.Dictionary<string, System.Windows.Forms.PictureBox>();
         private System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap> originalBitmaps = new System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap>();
-        private System.Collections.Generic.Dictionary<string, System.Windows.Forms.ComboBox> comboBoxes = new System.Collections.Generic.Dictionary<string, System.Windows.Forms.ComboBox>();
         private System.Collections.Generic.Dictionary<string, System.Windows.Forms.Panel> panels = new System.Collections.Generic.Dictionary<string, System.Windows.Forms.Panel>();
-        private System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap> resizedBitmaps = new System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap>();
-        private int origWidth = 0;
-        private int origHeight = 0;
+        private System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap> recoloredBitmaps = new System.Collections.Generic.Dictionary<string, System.Drawing.Bitmap>();
+        private double prevResizeValue = 0d;
+
+        // get a relative size and locations (if it just needs relocated
+        // and not resized) for each control and tab page to use when
+        // resizing the form based on the Form's new Size.
+        private System.Drawing.Size tabPageDiff;
+        private System.Drawing.Size tabDiff;
+        private System.Drawing.Size panelDiff;
+
+        public Form1() => this.InitializeComponent();
 
         private void openImageToolStripMenuItem_Click(object sender, System.EventArgs e)
         {
-            var result = openFileDialog1.ShowDialog();
+            var result = this.openFileDialog1.ShowDialog();
             if (result != System.Windows.Forms.DialogResult.Cancel)
             {
-                var tmpBitmap = new System.Drawing.Bitmap(openFileDialog1.FileName);
-                if (pictureBox1.Image != null)
+                var tmpBitmap = new System.Drawing.Bitmap(this.openFileDialog1.FileName);
+                if (this.pictureBox1.Image != null)
                 {
-                    var page = new System.Windows.Forms.TabPage($"image{tabControl1.TabCount + 1}");
+                    var page = new System.Windows.Forms.TabPage($"image{this.tabControl1.TabCount + 1}");
                     var panel = new System.Windows.Forms.Panel
                     {
                         AutoScroll = true,
-                        Location = panel1.Location,
+                        Location = this.panel1.Location,
                         Name = "panel",
-                        Size = panel1.Size,
+                        Size = this.panel1.Size,
                         TabIndex = 0
                     };
                     var picturebox = new System.Windows.Forms.PictureBox
@@ -34,263 +39,127 @@
                         Location = panel.Location,
                         Name = "picturebox",
                         Size = tmpBitmap.Size,
+                        SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom,
                         TabIndex = 0,
                         TabStop = false,
                         Image = tmpBitmap
                     };
-                    var combobox = new System.Windows.Forms.ComboBox
-                    {
-                        FormattingEnabled = true,
-                        Location = comboBox1.Location,
-                        Name = "combobox",
-                        Size = comboBox1.Size,
-                        TabIndex = 1
-                    };
-                    combobox.SelectedIndexChanged += new System.EventHandler(comboBox1_SelectedIndexChanged);
-                    // do not relist the items, copy them from first listbox.
-                    var items = new object[comboBox1.Items.Count];
-                    comboBox1.Items.CopyTo(items, 0);
-                    combobox.Items.AddRange(items);
                     panel.Controls.Add(picturebox);
                     page.Controls.Add(panel);
-                    page.Controls.Add(combobox);
-                    tabControl1.TabPages.Add(page);
-                    picboxList.Add(page.Text, picturebox);
-                    originalBitmaps.Add(page.Text, tmpBitmap);
-                    comboBoxes.Add(page.Text, combobox);
-                    panels.Add(page.Text, panel);
+                    this.tabControl1.TabPages.Add(page);
+                    this.picboxList.Add(page.Text, picturebox);
+                    this.originalBitmaps.Add(page.Text, tmpBitmap);
+                    this.panels.Add(page.Text, panel);
                 }
                 else
                 {
-                    tabControl1.Visible = true;
-                    pictureBox1.Size = tmpBitmap.Size;
-                    pictureBox1.Image = tmpBitmap;
-                    picboxList.Add(tabPage1.Text, pictureBox1);
-                    originalBitmaps.Add(tabPage1.Text, tmpBitmap);
-                    comboBoxes.Add(tabPage1.Text, comboBox1);
-                    panels.Add(tabPage1.Text, panel1);
+                    this.tabControl1.Visible = true;
+                    this.pictureBox1.Size = tmpBitmap.Size;
+                    this.pictureBox1.Image = tmpBitmap;
+                    this.picboxList.Add(this.tabPage1.Text, this.pictureBox1);
+                    this.originalBitmaps.Add(this.tabPage1.Text, tmpBitmap);
+                    this.panels.Add(this.tabPage1.Text, this.panel1);
                 }
-            }
-        }
-
-        private void comboBox1_SelectedIndexChanged(object sender, System.EventArgs e)
-        {
-            if (resizedBitmaps.ContainsKey(tabControl1.SelectedTab.Text))
-            {
-                resizedBitmaps[tabControl1.SelectedTab.Text].Dispose();
-                resizedBitmaps.Remove(tabControl1.SelectedTab.Text);
-            }
-            double.TryParse(comboBoxes[tabControl1.SelectedTab.Text].SelectedItem.ToString().Replace("%", string.Empty), out var value);
-            value = value / 100;
-            // create new bitmap enlarged.
-            var originalBitmap = originalBitmaps[tabControl1.SelectedTab.Text];
-            var newBitmap = new System.Drawing.Bitmap(
-                originalBitmap,
-                (int)(originalBitmap.Width * value), (int)(originalBitmap.Height * value));
-            if (value == 1.0)
-            {
-                // if at 100% then use original image instead.
-                newBitmap.Dispose();
-                picboxList[tabControl1.SelectedTab.Text].Image = originalBitmap;
-                picboxList[tabControl1.SelectedTab.Text].Size = originalBitmap.Size;
-            }
-            else
-            {
-                picboxList[tabControl1.SelectedTab.Text].Image = newBitmap;
-                picboxList[tabControl1.SelectedTab.Text].Size = newBitmap.Size;
-                resizedBitmaps.Add(tabControl1.SelectedTab.Text, newBitmap);
             }
         }
 
         private void closeImageToolStripMenuItem_Click(object sender, System.EventArgs e)
         {
-            var page = tabControl1.SelectedTab;
-            if (resizedBitmaps.ContainsKey(page.Text))
+            if (this.originalBitmaps.Count > 0)
             {
-                resizedBitmaps[page.Text].Dispose();
-                resizedBitmaps.Remove(page.Text);
-            }
-            originalBitmaps[page.Text].Dispose();
-            originalBitmaps.Remove(page.Text);
-            if (page.Text != "image1")
-            {
-                for (var i = 0; i < page.Controls.Count; i++)
+                var page = this.tabControl1.SelectedTab;
+
+                if (this.recoloredBitmaps.ContainsKey(page.Text))
                 {
-                    page.Controls[i].Dispose();
+                    this.recoloredBitmaps[page.Text].Dispose();
+                    this.recoloredBitmaps.Remove(page.Text);
                 }
-                comboBoxes[page.Text].Dispose();
-                comboBoxes.Remove(page.Text);
-                panels[page.Text].Dispose();
-                panels.Remove(page.Text);
-                picboxList[page.Text].Dispose();
-                picboxList.Remove(page.Text);
-                tabControl1.TabPages.Remove(page);
-                page.Dispose();
-            }
-            else
-            {
-                comboBoxes.Remove(page.Text);
-                panels.Remove(page.Text);
-                picboxList.Remove(page.Text);
-                pictureBox1.Image.Dispose();
-                pictureBox1.Image = null;
-                tabControl1.Visible = false;
+
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    item.Checked = item.Checked ? false : false;
+                }
+
+                this.originalBitmaps[page.Text].Dispose();
+                this.originalBitmaps.Remove(page.Text);
+                if (page.Text != "image1")
+                {
+                    for (var i = 0; i < page.Controls.Count; i++)
+                    {
+                        page.Controls[i].Dispose();
+                    }
+
+                    this.panels[page.Text].Dispose();
+                    this.panels.Remove(page.Text);
+                    this.picboxList[page.Text].Dispose();
+                    this.picboxList.Remove(page.Text);
+                    this.tabControl1.TabPages.Remove(page);
+                    page.Dispose();
+                }
+                else
+                {
+                    this.panels.Remove(page.Text);
+                    this.picboxList.Remove(page.Text);
+                    this.pictureBox1.Image.Dispose();
+                    this.pictureBox1.Image = null;
+                    this.tabControl1.Visible = false;
+                }
             }
         }
 
-        // does not resize the controls and place the comboxboxes on every tab correctly.
         private void Form1_Resize(object sender, System.EventArgs e)
         {
-            if (origHeight < Height)
+            this.tabControl1.Size = System.Drawing.Size.Subtract(this.Size, this.tabDiff);
+            for (var i = 0; i < this.tabControl1.TabPages.Count; i++)
             {
-                tabControl1.Height += 1;
-                for (var i = 0; i < tabControl1.TabPages.Count; i++)
-                {
-                    tabControl1.TabPages[i].Height += 1;
-                }
-                foreach (var panel in panels.Values)
-                {
-                    panel.Height += 1;
-                }
-                foreach (var combobox in comboBoxes.Values)
-                {
-                    var newloc = new System.Drawing.Point(combobox.Location.X + 1, combobox.Location.Y);
-                    combobox.Location = newloc;
-                }
-                origHeight += 1;
+                this.tabControl1.TabPages[i].Size = System.Drawing.Size.Subtract(this.Size, this.tabPageDiff);
             }
-            else if (origHeight > Height)
+
+            foreach (var panel in this.panels.Values)
             {
-                tabControl1.Height -= 1;
-                for (var i = 0; i < tabControl1.TabPages.Count; i++)
-                {
-                    tabControl1.TabPages[i].Height -= 1;
-                }
-                foreach (var panel in panels.Values)
-                {
-                    panel.Height -= 1;
-                }
-                foreach (var combobox in comboBoxes.Values)
-                {
-                    var newloc = new System.Drawing.Point(combobox.Location.X - 1, combobox.Location.Y);
-                    combobox.Location = newloc;
-                }
-                origHeight -= 1;
-            }
-            if (origWidth < Width)
-            {
-                tabControl1.Width += 1;
-                for (var i = 0; i < tabControl1.TabPages.Count; i++)
-                {
-                    tabControl1.TabPages[i].Width += 1;
-                }
-                foreach (var panel in panels.Values)
-                {
-                    panel.Width += 1;
-                }
-                foreach (var combobox in comboBoxes.Values)
-                {
-                    var newloc = new System.Drawing.Point(combobox.Location.X, combobox.Location.Y + 1);
-                    combobox.Location = newloc;
-                }
-                origWidth += 1;
-            }
-            else if (origWidth > Width)
-            {
-                tabControl1.Width -= 1;
-                for (var i = 0; i < tabControl1.TabPages.Count; i++)
-                {
-                    tabControl1.TabPages[i].Width -= 1;
-                }
-                foreach (var panel in panels.Values)
-                {
-                    panel.Width -= 1;
-                }
-                foreach (var combobox in comboBoxes.Values)
-                {
-                    var newloc = new System.Drawing.Point(combobox.Location.X, combobox.Location.Y - 1);
-                    combobox.Location = newloc;
-                }
-                origWidth -= 1;
+                panel.Size = System.Drawing.Size.Subtract(this.Size, this.panelDiff);
             }
         }
 
         private void Form1_Load(object sender, System.EventArgs e)
         {
-            origWidth = Width;
-            origHeight = Height;
+            this.panelDiff = System.Drawing.Size.Subtract(this.Size, this.panel1.Size);
+            this.tabPageDiff = System.Drawing.Size.Subtract(this.Size, this.tabPage1.Size);
+            this.tabDiff = System.Drawing.Size.Subtract(this.Size, this.tabControl1.Size);
         }
 
         private void Form1_FormClosed(object sender, System.Windows.Forms.FormClosedEventArgs e)
         {
-            for (var i = 0; i < tabControl1.TabPages.Count; i++)
+            for (var i = 0; i < this.tabControl1.TabPages.Count; i++)
             {
-                var page = tabControl1.TabPages[i];
-                if (resizedBitmaps.ContainsKey(page.Text))
+                var page = this.tabControl1.TabPages[i];
+
+                if (this.recoloredBitmaps.ContainsKey(page.Text))
                 {
-                    resizedBitmaps[page.Text].Dispose();
-                    resizedBitmaps.Remove(page.Text);
+                    this.recoloredBitmaps[page.Text].Dispose();
+                    this.recoloredBitmaps.Remove(page.Text);
                 }
+
                 for (var c = 0; c < page.Controls.Count; c++)
                 {
                     page.Controls[c].Dispose();
                 }
-                if (comboBoxes.ContainsKey(page.Text))
-                {
-                    comboBoxes[page.Text].Dispose();
-                    comboBoxes.Remove(page.Text);
-                }
-                if (panels.ContainsKey(page.Text))
-                {
-                    panels[page.Text].Dispose();
-                    panels.Remove(page.Text);
-                }
-                if (picboxList.ContainsKey(page.Text))
-                {
-                    picboxList[page.Text].Dispose();
-                    picboxList.Remove(page.Text);
-                }
-                page.Dispose();
-                tabControl1.TabPages.Remove(page);
-            }
-        }
 
-        private void button1_Click(object sender, System.EventArgs e)
-        {
-            var result = colorDialog1.ShowDialog();
-            if (result != System.Windows.Forms.DialogResult.Cancel)
-            {
-                var targethue = colorDialog1.Color.GetHue();
-                var page = tabControl1.SelectedTab;
-                var image = resizedBitmaps.ContainsKey(page.Text)
-                    ? new System.Drawing.Bitmap(resizedBitmaps[page.Text].Width, resizedBitmaps[page.Text].Height)
-                    : new System.Drawing.Bitmap(picboxList[page.Text].Image.Width, picboxList[page.Text].Image.Height);
-                for (var y = 0; y < image.Height; y++)
+                if (this.panels.ContainsKey(page.Text))
                 {
-                    for (var x = 0; x < image.Width; x++)
-                    {
-                        var pixelCol = resizedBitmaps.ContainsKey(page.Text)
-                            ? resizedBitmaps[page.Text].GetPixel(x, y)
-                            : originalBitmaps[page.Text].GetPixel(x, y);
-                        var pixelsat = pixelCol.GetSaturation();
-                        var pixellum = pixelCol.GetBrightness();
-                        // keep the alpha component, just recolor everything on the hue.
-                        var alpha = pixelCol.A;
-                        image.SetPixel(x, y, FromHsl(targethue, pixelsat, pixellum, alpha));
-                    }
+                    this.panels[page.Text].Dispose();
+                    this.panels.Remove(page.Text);
                 }
-                if (resizedBitmaps.ContainsKey(page.Text))
+
+                if (this.picboxList.ContainsKey(page.Text))
                 {
-                    resizedBitmaps[page.Text].Dispose();
-                    resizedBitmaps.Remove(page.Text);
-                    resizedBitmaps.Add(page.Text, image);
-                    picboxList[page.Text].Image = image;
+                    this.picboxList[page.Text].Dispose();
+                    this.picboxList.Remove(page.Text);
                 }
-                else
-                {
-                    resizedBitmaps.Add(page.Text, image);
-                    picboxList[page.Text].Image = image;
-                }
+
+                page.Dispose();
+                this.tabControl1.TabPages.Remove(page);
             }
         }
 
@@ -338,12 +207,307 @@
                 rgb[0] = chroma;
                 rgb[2] = x;
             }
+
             var m = System.Math.Round(255f * (lumosity - (chroma / 2)));
             return System.Drawing.Color.FromArgb(
                 alpha,
                 (int)(System.Math.Round(255f * rgb[0]) + m),
                 (int)(System.Math.Round(255f * rgb[1]) + m),
                 (int)(System.Math.Round(255f * rgb[2]) + m));
+        }
+
+        private void recolorImageToolStripMenuItem_Click(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count > 0)
+            {
+                var result = this.colorDialog1.ShowDialog();
+                if (result != System.Windows.Forms.DialogResult.Cancel)
+                {
+                    var targethue = this.colorDialog1.Color.GetHue();
+                    var page = this.tabControl1.SelectedTab;
+                    var image = new System.Drawing.Bitmap(this.picboxList[page.Text].Image.Width, this.picboxList[page.Text].Image.Height);
+                    for (var y = 0; y < image.Height; y++)
+                    {
+                        for (var x = 0; x < image.Width; x++)
+                        {
+                            var pixelCol = this.originalBitmaps[page.Text].GetPixel(x, y);
+                            var pixelsat = pixelCol.GetSaturation();
+                            var pixellum = pixelCol.GetBrightness();
+
+                            // keep the alpha component, just recolor everything on the hue.
+                            var alpha = pixelCol.A;
+                            image.SetPixel(x, y, FromHsl(targethue, pixelsat, pixellum, alpha));
+                        }
+                    }
+
+                    if (this.recoloredBitmaps.ContainsKey(page.Text))
+                    {
+                        this.recoloredBitmaps[page.Text].Dispose();
+                        this.recoloredBitmaps.Remove(page.Text);
+                        this.recoloredBitmaps.Add(page.Text, image);
+                        this.picboxList[page.Text].Image = image;
+                    }
+                    else
+                    {
+                        this.recoloredBitmaps.Add(page.Text, image);
+                        this.picboxList[page.Text].Image = image;
+                    }
+                }
+            }
+        }
+
+        private void zoomToolStripMenuItem_Click(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count > 0)
+            {
+                var itemtext = string.Empty;
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Checked)
+                    {
+                        itemtext = item.Text;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(itemtext))
+                {
+                    double.TryParse(itemtext.Replace("%", string.Empty), out var value);
+                    value = value / 100;
+                    if (value < this.prevResizeValue
+                        || value > this.prevResizeValue
+                        || value == this.prevResizeValue)
+                    {
+                        this.picboxList[this.tabControl1.SelectedTab.Text].Size = this.picboxList[this.tabControl1.SelectedTab.Text].Image.Size;
+                    }
+
+                    this.picboxList[this.tabControl1.SelectedTab.Text].Width = (int)(
+                        this.picboxList[this.tabControl1.SelectedTab.Text].Width * value);
+                    this.picboxList[this.tabControl1.SelectedTab.Text].Height = (int)(
+                        this.picboxList[this.tabControl1.SelectedTab.Text].Height * value);
+                    this.prevResizeValue = value;
+                }
+            }
+        }
+
+        private void toolStripMenuItem2_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem2.Checked = false;
+            }
+
+            if (this.toolStripMenuItem2.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem2.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem3_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem3.Checked = false;
+            }
+
+            if (this.toolStripMenuItem3.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem3.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem4_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem4.Checked = false;
+            }
+
+            if (this.toolStripMenuItem4.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem4.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem5_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem5.Checked = false;
+            }
+
+            if (this.toolStripMenuItem5.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem5.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem6_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem6.Checked = false;
+            }
+
+            if (this.toolStripMenuItem6.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem6.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem7_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem7.Checked = false;
+            }
+
+            if (this.toolStripMenuItem7.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem7.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem8_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem8.Checked = false;
+            }
+
+            if (this.toolStripMenuItem8.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem8.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem9_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem9.Checked = false;
+            }
+
+            if (this.toolStripMenuItem9.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem9.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem10_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem10.Checked = false;
+            }
+
+            if (this.toolStripMenuItem10.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem10.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void toolStripMenuItem11_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (this.originalBitmaps.Count < 1)
+            {
+                // make sure this stays unchecked when no items are open.
+                this.toolStripMenuItem11.Checked = false;
+            }
+
+            if (this.toolStripMenuItem11.Checked)
+            {
+                // ensure all other options are unchecked.
+                for (var i = 0; i < this.zoomToolStripMenuItem.DropDownItems.Count; i++)
+                {
+                    var item = (System.Windows.Forms.ToolStripMenuItem)this.zoomToolStripMenuItem.DropDownItems[i];
+                    if (item.Text != this.toolStripMenuItem11.Text && item.Checked)
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
         }
     }
 }
