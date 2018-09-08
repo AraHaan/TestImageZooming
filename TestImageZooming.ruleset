@@ -72,4 +72,8 @@
     <Rule Id="IDE0003" Action="None" />
     <Rule Id="IDE0003WithoutSuggestion" Action="None" />
   </Rules>
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <Rule Id="SA1633" Action="None" />
+    <Rule Id="SA1652" Action="None" />
+  </Rules>
 </RuleSet>
