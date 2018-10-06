@@ -1,7 +1,7 @@
 ﻿#load "Form1.Designer.csx"
-#load "Form2.csx"
 #load "..\Support\PicBoxZoom.csx"
 #load "..\Support\SafeNativeMethods.csx"
+#load "..\Support\ExtensionLoader.csx"
 
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
-public partial class Form1 : Form
+partial class Form1 : Form
 {
     private double prevResizeValue = 0d;
     private IntPtr hicon = IntPtr.Zero;
@@ -30,6 +30,8 @@ public partial class Form1 : Form
     internal static Dictionary<string, Panel> Panels { get; set; }
 
     internal static Dictionary<string, Bitmap> RecoloredBitmaps { get; set; }
+
+    internal static List<IExtension> Extensions { get; set; }
 
     private void OpenImageToolStripMenuItem_Click(object sender, EventArgs e)
     {
@@ -155,6 +157,40 @@ public partial class Form1 : Form
 
     private void Form1_Load(object sender, EventArgs e)
     {
+        Extensions = LoadExtensions();
+        foreach (var extension in Extensions)
+        {
+            // TODO: populate the extensions in the menustrip.
+            ToolStripMenuItem item = null;
+            if (extension.ExtensionRootMenu.Equals(this.FileToolStripMenuItem.Text))
+            {
+                item = this.FileToolStripMenuItem;
+            }
+            else if (extension.ExtensionRootMenu.Equals(this.EditToolStripMenuItem.Text))
+            {
+                item = this.EditToolStripMenuItem;
+            }
+            else if (extension.ExtensionRootMenu.Equals(this.ViewToolStripMenuItem.Text))
+            {
+                item = this.ViewToolStripMenuItem;
+            }
+            else
+            {
+                // create a new menu for the root menu entry name.
+            }
+
+            // starts to fail to add the entry to the menu item at the supplied index.
+            // var item = (ToolStripMenuItem)this.MenuStrip1.Items[index];
+            // var extensionItem = new ToolStripMenuItem();
+            // extensionItem.Name = extension.ExtensionMenuItem;
+            // extensionItem.Size = extension.ExtensionMenuSize;
+            // extensionItem.Text = extension.ExtensionMenuItem;
+            extension.Parrent = this;
+            // extensionItem.Click += new EventHandler(extension.ExtensionMenuItem_Click);
+            item.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                extension.ExtensionMenuItem});
+        }
+
         PicboxList = new Dictionary<string, PicBoxZoom>();
         OriginalBitmaps = new Dictionary<string, Bitmap>();
         Panels = new Dictionary<string, Panel>();
@@ -196,25 +232,6 @@ public partial class Form1 : Form
             page.Dispose();
             this.TabControl1.TabPages.Remove(page);
         }
-    }
-
-    private void RecolorImageToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        Form2.ColorDialog1 = new ColorDialog
-        {
-            AnyColor = true,
-            Color = Color.Transparent,
-            SolidColorOnly = true,
-        };
-        Form2.Result = Form2.ColorDialog1.ShowDialog();
-        var recolorForm = new Form2
-        {
-            Owner = this,
-        };
-        recolorForm.ShowDialog();
-        Form2.ColorDialog1.Dispose();
-        recolorForm.Dispose();
-        recolorForm = null;
     }
 
     private void ZoomToolStripMenuItem_Click(object sender, EventArgs e)

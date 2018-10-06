@@ -15,9 +15,12 @@
         private static void Main()
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+            var scriptDir = Directory.Exists($"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}Scripts")
+                ? $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}Scripts"
+                : $"{Environment.CurrentDirectory}..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}..{Path.DirectorySeparatorChar}Scripts";
             var scriptTask = CSharpScript.Create(
-                File.OpenRead($"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}Scripts{Path.DirectorySeparatorChar}Main.csx"),
-                ScriptOptions.Default.WithFilePath($"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}Scripts{Path.DirectorySeparatorChar}Main.csx")).RunAsync();
+                File.OpenRead($"{scriptDir}{Path.DirectorySeparatorChar}Main.csx"),
+                ScriptOptions.Default.WithFilePath($"{scriptDir}{Path.DirectorySeparatorChar}Main.csx")).RunAsync();
 
             // seems to throw the exception here.
             if (scriptTask.Result.Exception != null)

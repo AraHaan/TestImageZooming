@@ -27,6 +27,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -62,36 +63,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Scripts\Interfaces\IExtension.csx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="Scripts\Extensions\Extensions.csx" />
+    <None Include="Scripts\Extensions\Recolor Image\RecolorImageExtension.csx" />
+    <None Include="Scripts\Extensions\Recolor Image\RecolorImageFrm.csx">
+      <SubType>Form</SubType>
     </None>
+    <None Include="Scripts\Extensions\Recolor Image\RecolorImageFrm.Designer.csx">
+      <DependentUpon>RecolorImageFrm.csx</DependentUpon>
+    </None>
+    <None Include="Scripts\Interfaces\IExtension.csx" />
     <None Include="Scripts\Forms\Form1.csx">
       <SubType>Form</SubType>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Scripts\Forms\Form1.Designer.csx">
       <DependentUpon>Form1.csx</DependentUpon>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Scripts\Forms\Form2.csx">
-      <SubType>Form</SubType>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Scripts\Forms\Form2.Designer.csx">
-      <DependentUpon>Form2.csx</DependentUpon>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Scripts\Main.csx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Scripts\Support\PicBoxZoom.csx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <None Include="Scripts\Main.csx" />
+    <None Include="Scripts\Support\ExtensionLoader.csx" />
+    <None Include="Scripts\Support\PicBoxZoom.csx" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="Scripts\Support\SafeNativeMethods.csx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <None Include="Scripts\Support\SafeNativeMethods.csx" />
     <None Include="TestImageZooming.ruleset" />
   </ItemGroup>
   <ItemGroup>
