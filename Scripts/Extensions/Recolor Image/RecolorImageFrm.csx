@@ -1,18 +1,17 @@
-﻿#load "RecolorImageFrm.Designer.csx"
+#load "RecolorImageFrm.Designer.csx"
 
 using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-internal partial class RecolorImageFrm : Form
+internal partial class RecolorImageFrm : /*System.Windows.Forms.*/Form
 {
     public RecolorImageFrm() => this.InitializeComponent();
 
-    internal static ColorDialog ColorDialog1 { get; set; }
+    internal static /*System.Windows.Forms.*/ColorDialog ColorDialog1 { get; set; }
 
-    internal static DialogResult Result { get; set; }
+    internal static /*System.Windows.Forms.*/DialogResult Result { get; set; }
 
     /// <summary>
     /// Creates a new <see cref="Color"/> from the input HSL values.
@@ -29,11 +28,11 @@ internal partial class RecolorImageFrm : Form
     ///   </code>
     /// </example>
     /// <returns>A new <see cref="Color"/> with the Color that the HSL values represent.</returns>
-    internal static Color FromHsl(float hue, float saturation, float lumosity, int alpha)
+    internal static /*System.Drawing.*/Color FromHsl(float hue, float saturation, float lumosity, int alpha)
     {
-        var chroma = (1 - Math.Abs((2 * lumosity) - 1)) * saturation;
+        var chroma = (1 - /*System.*/Math.Abs((2 * lumosity) - 1)) * saturation;
         var hue2 = hue / 60;
-        var x = chroma * (1 - Math.Abs((hue2 % 2) - 1));
+        var x = chroma * (1 - /*System.*/Math.Abs((hue2 % 2) - 1));
         var rgb = new float[3];
         if (hue2 < 1)
         {
@@ -66,15 +65,15 @@ internal partial class RecolorImageFrm : Form
             rgb[2] = x;
         }
 
-        var m = Math.Round(255f * (lumosity - (chroma / 2)));
-        return Color.FromArgb(
+        var m = /*System.*/Math.Round(255f * (lumosity - (chroma / 2)));
+        return /*System.Drawing.*/Color.FromArgb(
             alpha,
-            (int)(Math.Round(255f * rgb[0]) + m),
-            (int)(Math.Round(255f * rgb[1]) + m),
-            (int)(Math.Round(255f * rgb[2]) + m));
+            (int)(/*System.*/Math.Round(255f * rgb[0]) + m),
+            (int)(/*System.*/Math.Round(255f * rgb[1]) + m),
+            (int)(/*System.*/Math.Round(255f * rgb[2]) + m));
     }
 
-    private void RecolorImageFrm_Load(object sender, EventArgs e) => Task.Factory.StartNew(() => this.RecolorImage());
+    private void RecolorImageFrm_Load(object sender, /*System.*/EventArgs e) => /*System.Threading.Tasks.*/Task.Factory.StartNew(() => this.RecolorImage());
 
     private void RecolorImage()
     {
@@ -82,15 +81,15 @@ internal partial class RecolorImageFrm : Form
         {
             var targethue = ColorDialog1.Color.GetHue();
             var targetsat = ColorDialog1.Color.GetSaturation();
-            TabPage page = null;
-            this.Owner.Invoke((MethodInvoker)(() =>
+            /*System.Windows.Forms.*/TabPage page = null;
+            this.Owner.Invoke((/*System.Windows.Forms.*/MethodInvoker)(() =>
             {
                 page = ((Form1)this.Owner).TabControl1.SelectedTab;
             }));
-            var image = new Bitmap(
+            var image = new /*System.Drawing.*/Bitmap(
                 Form1.PicboxList[page.Text].Picturebox.Image.Width,
                 Form1.PicboxList[page.Text].Picturebox.Image.Height);
-            this.Invoke((MethodInvoker)(() =>
+            this.Invoke((/*System.Windows.Forms.*/MethodInvoker)(() =>
             {
                 this.progressBar1.Maximum = image.Width * image.Height;
             }));
@@ -99,7 +98,7 @@ internal partial class RecolorImageFrm : Form
             {
                 for (var x = 0; x < image.Width; x++)
                 {
-                    this.Invoke((MethodInvoker)(() =>
+                    this.Invoke((/*System.Windows.Forms.*/MethodInvoker)(() =>
                     {
                         this.progressBar1.Value = pixelIndex;
                     }));
@@ -126,7 +125,7 @@ internal partial class RecolorImageFrm : Form
             Marshal.Copy(ptr, rgbValues, 0, bytes);
             for (var counter = 0; counter < rgbValues.Length; counter += 3)
             {
-                this.Invoke((MethodInvoker)(() =>
+                this.Invoke((System.Windows.Forms.MethodInvoker)(() =>
                 {
                     this.progressBar1.Value = counter;
                 }));
@@ -160,7 +159,7 @@ internal partial class RecolorImageFrm : Form
             }
         }
 
-        this.Invoke((MethodInvoker)(() =>
+        this.Invoke((/*System.Windows.Forms.*/MethodInvoker)(() =>
         {
             this.Close();
         }));

@@ -1,4 +1,4 @@
-﻿#load "Form1.Designer.csx"
+#load "Form1.Designer.csx"
 #load "..\Support\PicBoxZoom.csx"
 #load "..\Support\SafeNativeMethods.csx"
 #load "..\Support\ExtensionLoader.csx"
@@ -162,17 +162,23 @@ partial class Form1 : Form
         {
             // TODO: populate the extensions in the menustrip.
             ToolStripMenuItem item = null;
-            if (extension.ExtensionRootMenu.Equals(this.FileToolStripMenuItem.Text))
+            if (this.FileToolStripMenuItem.Text.Equals(extension.ExtensionRootMenu))
             {
-                item = this.FileToolStripMenuItem;
+                this.FileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                    extension.ExtensionMenuItem});
+                // item = this.FileToolStripMenuItem;
             }
-            else if (extension.ExtensionRootMenu.Equals(this.EditToolStripMenuItem.Text))
+            else if (this.EditToolStripMenuItem.Text.Equals(extension.ExtensionRootMenu))
             {
-                item = this.EditToolStripMenuItem;
+                this.EditToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                    extension.ExtensionMenuItem});
+                // item = this.EditToolStripMenuItem;
             }
-            else if (extension.ExtensionRootMenu.Equals(this.ViewToolStripMenuItem.Text))
+            else if (this.ViewToolStripMenuItem.Text.Equals(extension.ExtensionRootMenu))
             {
-                item = this.ViewToolStripMenuItem;
+                this.ViewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                    extension.ExtensionMenuItem});
+                // item = this.ViewToolStripMenuItem;
             }
             else
             {
@@ -187,8 +193,23 @@ partial class Form1 : Form
             // extensionItem.Text = extension.ExtensionMenuItem;
             extension.Parrent = this;
             // extensionItem.Click += new EventHandler(extension.ExtensionMenuItem_Click);
-            item.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                extension.ExtensionMenuItem});
+            // item.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            //     extension.ExtensionMenuItem});
+            // if (extension.ExtensionRootMenu.Equals(this.FileToolStripMenuItem.Text))
+            // {
+            //     this.FileToolStripMenuItem = item;
+            // }
+            // else if (extension.ExtensionRootMenu.Equals(this.EditToolStripMenuItem.Text))
+            // {
+            //     this.EditToolStripMenuItem = item;
+            // }
+            // else if (extension.ExtensionRootMenu.Equals(this.ViewToolStripMenuItem.Text))
+            // {
+            //     this.ViewToolStripMenuItem = item;
+            // }
+            // else
+            // {
+            // }
         }
 
         PicboxList = new Dictionary<string, PicBoxZoom>();

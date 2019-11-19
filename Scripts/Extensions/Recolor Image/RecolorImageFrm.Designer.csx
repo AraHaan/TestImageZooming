@@ -1,4 +1,4 @@
-﻿
+
 internal partial class RecolorImageFrm
 {
     /// <summary>

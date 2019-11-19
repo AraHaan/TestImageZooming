@@ -1,4 +1,4 @@
-﻿#load "..\Support\PicBoxZoom.csx"
+#load "..\Support\PicBoxZoom.csx"
 
 using System;
 using System.Collections.Generic;
